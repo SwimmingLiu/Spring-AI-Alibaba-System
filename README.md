@@ -28,5 +28,5 @@ http://localhost:8091/doc.html
 
 ## 参考
 
-[Spring-AI-Alibaba](https://github.com/alibaba/spring-ai-alibaba) / [Spring-AI-Alibaba-Examples](https://github.com/springaialibaba/spring-ai-alibaba-examples)
+[Spring-AI-Alibaba](https://github.com/alibaba/spring-ai-alibaba)  / [Spring-AI-Alibaba-Examples](https://github.com/springaialibaba/spring-ai-alibaba-examples)
 
