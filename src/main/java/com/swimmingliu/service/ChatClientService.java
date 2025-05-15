@@ -1,16 +1,17 @@
 package com.swimmingliu.service;
 
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 public interface ChatClientService {
     /**
-     * 普通提问
+     * 提问
      * @return
      */
     String ask(String question, String chatId);
 
     /**
-     * 普通提问-流式回复
+     * 提问-流式回复
      * @return
      */
     Flux<String> askStream (String question, String chatId);
@@ -23,4 +24,22 @@ public interface ChatClientService {
     default Boolean checkWebSearch(String question){
        return true;
     };
+
+    /**
+     * 提问-文档检索
+     * @param question
+     * @param chatId
+     * @param file
+     * @return
+     */
+    default String askWithFile(String question, String chatId, MultipartFile file) {return "";};
+
+    /**
+     * 提问-文档检索 - 流式回复
+     * @param question
+     * @param chatId
+     * @param file
+     * @return
+     */
+    default Flux<String> askStreamWithFile(String question, String chatId, MultipartFile file) {return Flux.empty();};
 }

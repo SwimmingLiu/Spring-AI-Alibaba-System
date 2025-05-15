@@ -9,10 +9,11 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
-import static com.swimmingliu.common.constants.BaseConstants.DEFAULT_SETTING_PROMPT;
-import static com.swimmingliu.common.constants.BaseConstants.NEEDS_WEB_SEARCH_CHECK_PROMPT;
+import static com.swimmingliu.common.constants.BaseConstants.*;
+import static com.swimmingliu.common.utils.AIChatUtil.getDocumentText;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
@@ -59,6 +60,34 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
                 .advisors(x -> x
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                .stream()
+                .content();
+    }
+
+    @Override
+    public String askWithFile(String question, String chatId, MultipartFile file) {
+        String documentText = getDocumentText(file);
+        return deepSeekChatClient.prompt(question)
+                .advisors(x -> x
+                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                .system(systemSpec ->
+                        systemSpec.text(DOCUMENT_RAG_PROMPT).param("document", documentText)
+                )
+                .call()
+                .content();
+    }
+
+    @Override
+    public Flux<String> askStreamWithFile(String question, String chatId, MultipartFile file) {
+        String documentText = getDocumentText(file);
+        return this.deepSeekChatClient.prompt(question)
+                .advisors(x -> x
+                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                .system(systemSpec ->
+                        systemSpec.text(DOCUMENT_RAG_PROMPT).param("document", documentText)
+                )
                 .stream()
                 .content();
     }

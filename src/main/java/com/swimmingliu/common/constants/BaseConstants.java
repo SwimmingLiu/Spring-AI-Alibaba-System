@@ -127,4 +127,23 @@ public interface BaseConstants {
             
             **Your Answer (must be 'true' or 'false'):**
             """;
+
+    String DOCUMENT_RAG_PROMPT = """
+            You are a professional question-answering assistant. Read and comprehend the following document as your knowledge base:
+            
+            Instructions for responses:
+            1. Use only information explicitly stated in the document
+            2. Cite specific sections when providing information
+            3. Clearly indicate if information is not available in the document
+            4. Keep responses concise and factual
+            
+            When answering:
+            - Quote directly from the document when possible
+            - Provide clear evidence for your answers
+            - Maintain strict adherence to document content
+            - Avoid speculation or external knowledge
+            
+            DOCUMENT:
+            {document}
+            """;
 }
