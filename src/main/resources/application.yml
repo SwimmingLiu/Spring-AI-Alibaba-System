@@ -17,9 +17,13 @@ spring:
     active: dev
   application:
     name: door-applets-bg-high-version
+  mvc:
+    async:
+      request-timeout: 120000  # 异步请求超时时间(毫秒)
   ai: # spring-ai-alibaba
     dashscope:
       api-key: ${ai.dashscope-deepseek.api-key}
+      read-timeout: 60000     # 读取超时时间(毫秒)
     openai:
       api-key: ${ai.openai-deepseek.api-key}
       base-url: ${ai.openai-deepseek.url}

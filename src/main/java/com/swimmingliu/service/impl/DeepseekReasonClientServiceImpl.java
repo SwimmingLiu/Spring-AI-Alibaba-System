@@ -12,7 +12,7 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import static com.swimmingliu.common.constants.BaseConstants.DEFAULT_SETTING_PROMPT;
+import static com.swimmingliu.common.constants.BaseConstants.DEFAULT_REASON_SETTING_PROMPT;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
@@ -42,7 +42,7 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
                 .defaultAdvisors(new SimpleLoggerAdvisor())
                 // 设置 ChatClient 中 ChatModel 的 Options 参数
                 .defaultOptions(dashScopeChatOptions)
-                .defaultSystem(DEFAULT_SETTING_PROMPT)
+                .defaultSystem(DEFAULT_REASON_SETTING_PROMPT)
                 .build();
     }
 
