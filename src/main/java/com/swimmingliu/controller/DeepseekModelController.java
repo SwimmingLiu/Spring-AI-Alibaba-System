@@ -1,6 +1,7 @@
 package com.swimmingliu.controller;
 
 import com.alibaba.nacos.common.utils.StringUtils;
+import com.swimmingliu.common.enums.ChatTypeEnum;
 import com.swimmingliu.common.response.Result;
 import com.swimmingliu.model.vo.AIChatVO;
 import com.swimmingliu.service.ChatClientService;
@@ -12,12 +13,15 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 import static com.swimmingliu.common.constants.BaseConstants.DEFAULT_QUESTION_PROMPT;
 import static com.swimmingliu.common.utils.RandomUtil.generateChatId;
 
 @RestController
 @RequestMapping("/deepseek")
-@Tag(name = "deepseek API", description = "DeepSeek Chat Model API")
+@Tag(name = "Deepseek API", description = "DeepSeek Chat Model API")
 public class DeepseekModelController {
 
     @Resource
@@ -33,133 +37,118 @@ public class DeepseekModelController {
     private ChatClientService deepseekWebSearchReasonClientService;
 
     @GetMapping("/chat")
-    @Operation(summary = "普通对话")
+    @Operation(summary = "统一对话接口")
     public Result chat(
             @Parameter(description = "请输入您需要提问的问题", required = true)
             @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
+            @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
+            @Parameter(description = "对话类型", required = true) ChatTypeEnum chatType) {
         chatId = ensureChatId(chatId);
-        String answer = deepseekChatClientService.ask(question, chatId);
-        return Result.ok().data(buildChatVO(chatId, answer, false));
+        String answer;
+        boolean thinkStatus = false;
+
+        switch (chatType) {
+            case CHAT -> answer = deepseekChatClientService.ask(question, chatId);
+            case REASON -> {
+                answer = deepseekReasonClientService.ask(question, chatId);
+                thinkStatus = true;
+            }
+            case CHAT_WEB -> answer = checkWebSearch(question) ?
+                    deepseekWebSearchClientService.ask(question, chatId) :
+                    deepseekChatClientService.ask(question, chatId);
+            case REASON_WEB -> {
+                answer = checkWebSearch(question) ?
+                        deepseekWebSearchReasonClientService.ask(question, chatId) :
+                        deepseekReasonClientService.ask(question, chatId);
+                thinkStatus = true;
+            }
+            default -> throw new IllegalArgumentException("Unsupported chat type");
+        }
+
+        return Result.ok().data(buildChatVO(chatId, answer, thinkStatus));
     }
 
     @GetMapping(value = "/stream/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "普通对话-流式")
+    @Operation(summary = "统一对话接口-流式")
     public Flux<String> streamChat(
             @Parameter(description = "请输入您需要提问的问题", required = true)
             @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
+            @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
+            @Parameter(description = "对话类型", required = true) ChatTypeEnum chatType) {
         chatId = ensureChatId(chatId);
-        return buildStreamResult(deepseekChatClientService.askStream(question, chatId), chatId, false);
-    }
+        Flux<String> stream;
+        boolean thinkStatus = false;
 
-    @GetMapping("/reason/chat")
-    @Operation(summary = "推理对话")
-    public Result reasonChat(
-            @Parameter(description = "请输入您需要提问的问题", required = true)
-            @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
-        chatId = ensureChatId(chatId);
-        String answer = deepseekReasonClientService.ask(question, chatId);
-        return Result.ok().data(buildChatVO(chatId, answer, true));
-    }
-
-    @GetMapping(value = "/stream/reason/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "推理对话-流式")
-    public Flux<String> streamReasonChat(
-            @Parameter(description = "请输入您需要提问的问题", required = true)
-            @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
-        chatId = ensureChatId(chatId);
-        return buildStreamResult(deepseekReasonClientService.askStream(question, chatId), chatId, true);
-    }
-
-    @GetMapping("/search/chat")
-    @Operation(summary = "普通对话-网络搜索")
-    public Result searchChat(
-            @Parameter(description = "请输入您需要提问的问题", required = true)
-            @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
-        chatId = ensureChatId(chatId);
-        boolean needWebSearch = checkWebSearch(question);
-        String answer;
-        if (needWebSearch) {
-            answer = deepseekWebSearchClientService.ask(question, chatId);
-        } else {
-            answer = deepseekChatClientService.ask(question, chatId);
+        switch (chatType) {
+            case CHAT -> stream = deepseekChatClientService.askStream(question, chatId);
+            case REASON -> {
+                stream = deepseekReasonClientService.askStream(question, chatId);
+                thinkStatus = true;
+            }
+            case CHAT_WEB -> stream = checkWebSearch(question) ?
+                    deepseekWebSearchClientService.askStream(question, chatId) :
+                    deepseekChatClientService.askStream(question, chatId);
+            case REASON_WEB -> {
+                stream = checkWebSearch(question) ?
+                        deepseekWebSearchReasonClientService.askStream(question, chatId) :
+                        deepseekReasonClientService.askStream(question, chatId);
+                thinkStatus = true;
+            }
+            default -> throw new IllegalArgumentException("Unsupported chat type");
         }
-        return Result.ok().data(buildChatVO(chatId, answer, false));
+
+        return buildStreamResult(stream, chatId, thinkStatus);
     }
 
-    @GetMapping(value = "/stream/search/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "普通对话-网络搜索-流式")
-    public Flux<String> streamSearchChat(
-            @Parameter(description = "请输入您需要提问的问题", required = true)
-            @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
-        chatId = ensureChatId(chatId);
-        boolean needWebSearch = checkWebSearch(question);
-        if (needWebSearch) {
-            return buildStreamResult(deepseekWebSearchClientService.askStream(question, chatId), chatId, false);
-        } else {
-            return buildStreamResult(deepseekChatClientService.askStream(question, chatId), chatId, false);
+    /**
+     * 提取思考内容并处理答案
+     */
+    private void processThinkContent(AIChatVO.AIChatVOBuilder builder, String answer, boolean thinkStatus) {
+        if (!thinkStatus) {
+            builder.answer(answer);
+            builder.think(null);
+            return;
         }
-    }
-
-    @GetMapping("/search/reason/chat")
-    @Operation(summary = "推理对话-网络搜索")
-    public Result searchReasonChat(
-            @Parameter(description = "请输入您需要提问的问题", required = true)
-            @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
-        chatId = ensureChatId(chatId);
-        boolean needWebSearch = checkWebSearch(question);
-        String answer;
-        if (needWebSearch) {
-            answer = deepseekWebSearchReasonClientService.ask(question, chatId);
-        } else {
-            answer = deepseekReasonClientService.ask(question, chatId);
+        // 分离思维链和答案
+        String think = null;
+        String processedAnswer = answer;
+        Pattern pattern = Pattern.compile("<think>(.*?)</think>", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(answer);
+        if (matcher.find()) {
+            think = matcher.group(1).trim();
+            int start = answer.indexOf("</think>");
+            processedAnswer = answer.substring(start + 8).trim();
         }
-        return Result.ok().data(buildChatVO(chatId, answer, false));
-    }
-
-    @GetMapping(value = "/stream/search/reason/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "推理对话-网络搜索-流式")
-    public Flux<String> streamSearchReasonChat(
-            @Parameter(description = "请输入您需要提问的问题", required = true)
-            @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
-            @Parameter(description = "当前对话ID") String chatId) {
-        chatId = ensureChatId(chatId);
-        boolean needWebSearch = checkWebSearch(question);
-        if (needWebSearch) {
-            return buildStreamResult(deepseekWebSearchReasonClientService.askStream(question, chatId), chatId, true);
-        } else {
-            return buildStreamResult(deepseekReasonClientService.askStream(question, chatId), chatId, false);
-        }
+        builder.answer(processedAnswer);
+        builder.think(think);
     }
 
     /**
      * 构建非流式聊天返回对象
      */
     private AIChatVO buildChatVO(String chatId, String answer, boolean thinkStatus) {
-        return AIChatVO.builder()
+        AIChatVO.AIChatVOBuilder builder = AIChatVO.builder()
                 .chatId(chatId)
-                .answer(answer)
-                .thinkStatus(thinkStatus)
-                .build();
+                .thinkStatus(thinkStatus);
+
+        processThinkContent(builder, answer, thinkStatus);
+        return builder.build();
     }
 
     /**
      * 构建流式结果
      */
     private Flux<String> buildStreamResult(Flux<String> stream, String chatId, boolean thinkStatus) {
-        return stream.map(text -> Result.ok()
-                .data(AIChatVO.builder()
-                        .chatId(chatId)
-                        .answer(text)
-                        .thinkStatus(thinkStatus)
-                        .build())
-                .toString());
+        return stream.map(text -> {
+            AIChatVO.AIChatVOBuilder builder = AIChatVO.builder()
+                    .chatId(chatId)
+                    .thinkStatus(thinkStatus);
+
+            processThinkContent(builder, text, thinkStatus);
+            return Result.ok()
+                    .data(builder.build())
+                    .toString();
+        });
     }
 
     /**
