@@ -36,6 +36,7 @@
         <mysql>8.0.32</mysql>
         <jwt>4.5.0</jwt>
         <jedis>5.2.0</jedis>
+        <qiniucloud>7.18.0</qiniucloud>
     </properties>
     <dependencies>
         <dependency>
@@ -86,6 +87,11 @@
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>${jedis}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.qiniu</groupId>
+            <artifactId>qiniu-java-sdk</artifactId>
+            <version>${qiniucloud}</version>
         </dependency>
     </dependencies>
 
