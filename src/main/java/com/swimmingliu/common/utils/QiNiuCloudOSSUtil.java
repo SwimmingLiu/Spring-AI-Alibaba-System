@@ -12,6 +12,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.HttpsURLConnection;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
+import java.io.FileOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,55 +58,45 @@ public class QiNiuCloudOSSUtil {
 
     public MultipartFile getMultipartFileFromUrl(String fileUrl) {
         try {
+            // 配置信任所有证书
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, new TrustManager[]{new X509TrustManager() {
+                @Override
+                public X509Certificate[] getAcceptedIssuers() { return null; }
+                @Override
+                public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                @Override
+                public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+            }}, new SecureRandom());
+
             java.net.URL url = new java.net.URL(fileUrl);
+            HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+            conn.setSSLSocketFactory(sslContext.getSocketFactory());
+            conn.setHostnameVerifier((hostname, session) -> true);
+
             String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
 
             return new MultipartFile() {
                 @Override
-                public String getName() {
-                    return fileName;
-                }
-
+                public String getName() { return fileName; }
                 @Override
-                public String getOriginalFilename() {
-                    return fileName;
-                }
-
+                public String getOriginalFilename() { return fileName; }
                 @Override
-                public String getContentType() {
-                    return null;
-                }
-
+                public String getContentType() { return conn.getContentType(); }
                 @Override
-                public boolean isEmpty() {
-                    return false;
-                }
-
+                public boolean isEmpty() { return false; }
                 @Override
-                public long getSize() {
-                    try {
-                        return url.openConnection().getContentLength();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                }
-
+                public long getSize() { return conn.getContentLength(); }
                 @Override
                 public byte[] getBytes() throws IOException {
-                    try (InputStream is = url.openStream()) {
-                        return is.readAllBytes();
-                    }
+                    try (InputStream is = conn.getInputStream()) { return is.readAllBytes(); }
                 }
-
                 @Override
-                public InputStream getInputStream() throws IOException {
-                    return url.openStream();
-                }
-
+                public InputStream getInputStream() throws IOException { return conn.getInputStream(); }
                 @Override
                 public void transferTo(java.io.File dest) throws IOException {
-                    try (InputStream is = url.openStream();
-                         java.io.FileOutputStream fos = new java.io.FileOutputStream(dest)) {
+                    try (InputStream is = conn.getInputStream();
+                         FileOutputStream fos = new FileOutputStream(dest)) {
                         is.transferTo(fos);
                     }
                 }
