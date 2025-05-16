@@ -71,7 +71,9 @@ oss:
 
 # OCR 识别
 ocr:
-  aliyun:
+  ali-cloud:
     access-key: ${aliyun.access-key}
     secret-key: ${aliyun.secret-key}
     endpoint: ${aliyun.endpoint}
+  llama-cloud:
+    access-key: ${llama.access-key}

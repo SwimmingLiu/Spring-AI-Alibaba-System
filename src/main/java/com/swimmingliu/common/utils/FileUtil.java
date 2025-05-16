@@ -3,12 +3,14 @@ package com.swimmingliu.common.utils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.MediaType;
 import org.apache.tika.Tika;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +27,8 @@ public class FileUtil {
 
     @Resource
     private QiNiuCloudOSSUtil qiNiuCloudOSSUtil;
+
+    private static final Tika tika = new Tika();
 
     /**
      * 使用Apache Tika判断URL是否为图片类型
@@ -123,5 +127,17 @@ public class FileUtil {
             log.error("提取文件名失败: {}", e.getMessage());
             return "";
         }
+    }
+
+    /**
+     * 获取文件的MediaType
+     *
+     * @param file 待检测的文件
+     * @return okhttp3的MediaType对象
+     * @throws IOException 如果文件读取失败
+     */
+    public static MediaType getMediaType(MultipartFile file) throws IOException {
+        String mimeType = tika.detect(file.getInputStream());
+        return MediaType.parse(mimeType);
     }
 }
