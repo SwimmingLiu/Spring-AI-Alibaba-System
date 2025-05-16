@@ -29,17 +29,17 @@ public interface ChatClientService {
      * 提问-文档检索
      * @param question
      * @param chatId
-     * @param file
+     * @param fileUrl
      * @return
      */
-    default String askWithFile(String question, String chatId, MultipartFile file) {return "";};
+    default String askWithFile(String question, String chatId, String fileUrl) {return "";};
 
     /**
      * 提问-文档检索 - 流式回复
      * @param question
      * @param chatId
-     * @param file
+     * @param fileUrl
      * @return
      */
-    default Flux<String> askStreamWithFile(String question, String chatId, MultipartFile file) {return Flux.empty();};
+    default Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) {return Flux.empty();};
 }

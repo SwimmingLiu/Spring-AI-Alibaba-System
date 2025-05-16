@@ -61,10 +61,17 @@ memory:
     port: ${redis.port}
     password: ${redis.password}
 
-# oss 文件上传
+# OSS 文件上传
 oss:
   qiniuyun:
     access-key: ${qiniuyun.access-key}
     secret-key: ${qiniuyun.secret-key}
     bucket: ${qiniuyun.bucket}
     prefix-url: ${qiniuyun.prefix-url}
+
+# OCR 识别
+ocr:
+  aliyun:
+    access-key: ${aliyun.access-key}
+    secret-key: ${aliyun.secret-key}
+    endpoint: ${aliyun.endpoint}
