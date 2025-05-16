@@ -36,22 +36,13 @@ public class RedisChatMemory implements ChatMemory, AutoCloseable {
 
 	private static final String DEFAULT_KEY_PREFIX = "chat_memory:";
 
-	private static final String DEFAULT_HOST = "127.0.0.1";
-
-	private static final int DEFAULT_PORT = 6379;
-
-	private static final String DEFAULT_PASSWORD = null;
+	private static final int DEFAULT_EXPIRY_SECONDS = 24 * 60 * 60;
 
 	private final JedisPool jedisPool;
 
 	private final Jedis jedis;
 
 	private final ObjectMapper objectMapper;
-
-	public RedisChatMemory() {
-
-		this(DEFAULT_HOST, DEFAULT_PORT, DEFAULT_PASSWORD);
-	}
 
 	public RedisChatMemory(String host, int port, String password) {
 
@@ -69,20 +60,19 @@ public class RedisChatMemory implements ChatMemory, AutoCloseable {
 
 	@Override
 	public void add(String conversationId, List<Message> messages) {
-
 		String key = DEFAULT_KEY_PREFIX + conversationId;
 
 		for (Message message : messages) {
 			try {
 				String messageJson = objectMapper.writeValueAsString(message);
 				jedis.rpush(key, messageJson);
-			}
-			catch (JsonProcessingException e) {
+				jedis.expire(key, DEFAULT_EXPIRY_SECONDS);
+			} catch (JsonProcessingException e) {
 				throw new RuntimeException("Error serializing message", e);
 			}
 		}
-
-		logger.info("Added messages to conversationId: {}", conversationId);
+		logger.info("Added messages to conversationId: {} with expiry of {} seconds",
+				conversationId, DEFAULT_EXPIRY_SECONDS);
 	}
 
 	@Override
@@ -137,7 +127,6 @@ public class RedisChatMemory implements ChatMemory, AutoCloseable {
 	public void clearOverLimit(String conversationId, int maxLimit, int deleteSize) {
 		try {
 			String key = DEFAULT_KEY_PREFIX + conversationId;
-
 			List<String> all = jedis.lrange(key, 0, -1);
 
 			if (all.size() >= maxLimit) {
@@ -147,8 +136,8 @@ public class RedisChatMemory implements ChatMemory, AutoCloseable {
 			for (String message : all) {
 				jedis.rpush(key, message);
 			}
-		}
-		catch (Exception e) {
+			jedis.expire(key, DEFAULT_EXPIRY_SECONDS);
+		} catch (Exception e) {
 			logger.error("Error clearing messages from Redis chat memory", e);
 			throw new RuntimeException(e);
 		}
@@ -158,11 +147,12 @@ public class RedisChatMemory implements ChatMemory, AutoCloseable {
 		String key = "spring_ai_alibaba_chat_memory:" + conversationId;
 		try {
 			this.jedis.del(key);
-			this.jedis.rpush(key, new String[] { messages });
-		}
-		catch (Exception var6) {
-			logger.error("Error updating messages from Redis chat memory", var6);
-			throw new RuntimeException(var6);
+			this.jedis.rpush(key, new String[]{messages});
+			// 设置过期时间
+			this.jedis.expire(key, DEFAULT_EXPIRY_SECONDS);
+		} catch (Exception e) {
+			logger.error("Error updating messages from Redis chat memory", e);
+			throw new RuntimeException(e);
 		}
 	}
 
