@@ -20,6 +20,7 @@ public class OssConfiguration {
         log.info("开始创建七牛云文件上传工具类对象：{}",qiNiuCloudProperties);
         return new QiNiuCloudOSSUtil(qiNiuCloudProperties.getAccessKey(),
                 qiNiuCloudProperties.getSecretKey(),
-                qiNiuCloudProperties.getBucket());
+                qiNiuCloudProperties.getBucket(),
+                qiNiuCloudProperties.getPrefixUrl());
     }
 }

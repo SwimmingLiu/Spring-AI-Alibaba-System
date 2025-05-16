@@ -24,7 +24,7 @@ public class QiNiuCloudOSSUtil {
     private String accessKey;
     private String secretKey;
     private String bucket;
-    private static final String RESULT_FILE_DOMAIN = "https://oss.swimmingliu.cn/";
+    private String prefixUrl;
 
     public String uploadFiles(MultipartFile file) throws Exception {
         Configuration cfg = new Configuration(Region.autoRegion());
@@ -38,7 +38,7 @@ public class QiNiuCloudOSSUtil {
         try (InputStream inputStream = file.getInputStream()) {
             Response response = uploadManager.put(inputStream, key, upToken, null, null);
             DefaultPutRet putRet = new Gson().fromJson(response.bodyString(), DefaultPutRet.class);
-            return RESULT_FILE_DOMAIN + putRet.key;
+            return prefixUrl + putRet.key;
         } catch (QiniuException ex) {
             log.error("七牛云上传失败: {}", ex.response != null ? ex.response.toString() : "无响应");
         }
