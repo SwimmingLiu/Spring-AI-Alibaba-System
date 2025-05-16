@@ -46,9 +46,9 @@ public class DeepseekFileController {
         boolean thinkStatus = false;
         MultipartFile file = qiNiuCloudOSSUtil.getMultipartFileFromUrl(fileUrl);
         switch (chatType) {
-            case CHAT -> answer = deepseekChatClientService.ask(question, chatId);
+            case CHAT -> answer = deepseekChatClientService.askWithFile(question, chatId, file);
             case REASON -> {
-                answer = deepseekReasonClientService.ask(question, chatId);
+                answer = deepseekReasonClientService.askWithFile(question, chatId, file);
                 thinkStatus = true;
             }
             default -> throw new IllegalArgumentException("Unsupported chat type");
@@ -68,10 +68,11 @@ public class DeepseekFileController {
         chatId = ensureChatId(chatId);
         Flux<String> stream;
         boolean thinkStatus = false;
+        MultipartFile file = qiNiuCloudOSSUtil.getMultipartFileFromUrl(fileUrl);
         switch (chatType) {
-            case CHAT -> stream = deepseekChatClientService.askStream(question, chatId);
+            case CHAT -> stream = deepseekChatClientService.askStreamWithFile(question, chatId, file);
             case REASON -> {
-                stream = deepseekReasonClientService.askStream(question, chatId);
+                stream = deepseekReasonClientService.askStreamWithFile(question, chatId, file);
                 thinkStatus = true;
             }
             default -> throw new IllegalArgumentException("Unsupported chat type");
