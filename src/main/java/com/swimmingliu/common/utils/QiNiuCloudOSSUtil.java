@@ -58,24 +58,10 @@ public class QiNiuCloudOSSUtil {
 
     public MultipartFile getMultipartFileFromUrl(String fileUrl) {
         try {
-            // 配置信任所有证书
-            SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, new TrustManager[]{new X509TrustManager() {
-                @Override
-                public X509Certificate[] getAcceptedIssuers() { return null; }
-                @Override
-                public void checkClientTrusted(X509Certificate[] certs, String authType) { }
-                @Override
-                public void checkServerTrusted(X509Certificate[] certs, String authType) { }
-            }}, new SecureRandom());
-
+            SSLUtil.trustAllHosts();
             java.net.URL url = new java.net.URL(fileUrl);
             HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-            conn.setSSLSocketFactory(sslContext.getSocketFactory());
-            conn.setHostnameVerifier((hostname, session) -> true);
-
             String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1);
-
             return new MultipartFile() {
                 @Override
                 public String getName() { return fileName; }

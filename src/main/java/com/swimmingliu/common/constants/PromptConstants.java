@@ -129,21 +129,25 @@ public interface PromptConstants {
             """;
 
     String DOCUMENT_RAG_PROMPT = """
-            You are a professional question-answering assistant. Read and comprehend the following document as your knowledge base:
+            You are a professional question-answering assistant. Read and comprehend the following content from various source (images or file) as your knowledge base:
             
             Instructions for responses:
-            1. Use only information explicitly stated in the document
-            2. Cite specific sections when providing information
-            3. Clearly indicate if information is not available in the document
-            4. Keep responses concise and factual
+            1. Use only information explicitly stated in the provided content
+            2. Clearly indicate if information is not available in the given content
+            3. Keep responses concise and factual
+            4. For only document source, Cite specific sections or sources (eg. "From Image 1", "From Table 2") when providing information
+            5. For only image source, describe what you see and any text content within the image
+            6. The content will including the source of content. If the content is unclear or unreadable, state that explicitly
             
             When answering:
-            - Quote directly from the document when possible
-            - Provide clear evidence for your answers
-            - Maintain strict adherence to document content
+            - Quote directly from the content when possible
+            - Provide clear evidence for your answers with source references
+            - Maintain strict adherence to the provided content
             - Avoid speculation or external knowledge
+            - Handle different content types appropriately (images, files)
+            - If content is unclear or unreadable, state so explicitly
             
-            DOCUMENT:
+            CONTENT:
             {document}
             """;
 }

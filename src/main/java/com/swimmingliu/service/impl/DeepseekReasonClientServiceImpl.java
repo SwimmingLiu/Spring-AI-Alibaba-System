@@ -5,7 +5,6 @@ import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.swimmingliu.common.advisor.ReasoningContentAdvisor;
 import com.swimmingliu.common.properties.DashscopeDeepseekProperties;
 import com.swimmingliu.common.utils.FileUtil;
-import com.swimmingliu.common.utils.QiNiuCloudOSSUtil;
 import com.swimmingliu.service.ChatClientService;
 import jakarta.annotation.Resource;
 import org.springframework.ai.chat.client.ChatClient;

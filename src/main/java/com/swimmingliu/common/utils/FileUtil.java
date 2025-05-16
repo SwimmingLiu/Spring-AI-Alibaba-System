@@ -3,7 +3,6 @@ package com.swimmingliu.common.utils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import opennlp.tools.namefind.RegexNameFinderFactory;
 import org.apache.tika.Tika;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
@@ -15,7 +14,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.swimmingliu.common.constants.BaseConstants.DEFAULT_OCR_TYPE;
 import static com.swimmingliu.common.constants.RegexConstants.OSS_FILE_SOURCE;
 
 @Component
@@ -39,6 +37,7 @@ public class FileUtil {
             return false;
         }
         try {
+            SSLUtil.trustAllHosts();
             Tika tika = new Tika();
             String mimeType = tika.detect(new URL(fileUrl));
             return mimeType != null && mimeType.startsWith("image/");
@@ -50,11 +49,12 @@ public class FileUtil {
 
     /**
      * 判断直接提取文档内容是否是空 (文档是图片的类型)
+     *
      * @param documentText
      * @return
      */
-    private boolean isEmptyContent(String documentText){
-        documentText = documentText.replaceAll(OSS_FILE_SOURCE,"").trim();
+    private boolean isEmptyContent(String documentText) {
+        documentText = documentText.replaceAll(OSS_FILE_SOURCE, "").trim();
         return StringUtils.isEmpty(documentText);
     }
 
@@ -100,10 +100,28 @@ public class FileUtil {
     /**
      * 通过OCR获取文件中的文本内容
      *
+     * @param fileUrl 文件URL
+     * @return 文本内容
+     */
+    private String getDocumentTextByOCR(String fileUrl) {
+        String content = aliCloudOCRUtil.recognizeTextFromUrl(fileUrl);
+        return "source: " + getFilenameFromUrl(fileUrl) + "\n\n\n" + content;
+    }
+
+    /**
+     * 从URL当中获取文件名
      * @param fileUrl
      * @return
      */
-    private String getDocumentTextByOCR(String fileUrl) {
-        return aliCloudOCRUtil.recognizeTextFromUrl(fileUrl);
+    public String getFilenameFromUrl(String fileUrl) {
+        if (StringUtils.isEmpty(fileUrl)) {
+            return "";
+        }
+        try {
+            return cn.hutool.core.io.FileUtil.getName(fileUrl);
+        } catch (Exception e) {
+            log.error("提取文件名失败: {}", e.getMessage());
+            return "";
+        }
     }
 }

@@ -44,7 +44,8 @@ public class AliCloudOCRUtil {
                     .setType(type == null ? DEFAULT_OCR_TYPE : type);
             RuntimeOptions runtime = new RuntimeOptions();
             RecognizeAllTextResponse response = client.recognizeAllTextWithOptions(request, runtime);
-            return JSON.toJSONString(response.getBody().getData());
+            String jsonStr = JSON.toJSONString(response.getBody().getData());
+            return JSON.parseObject(jsonStr).getString("content");
         } catch (Exception e) {
             log.error("OCR URL识别失败: {}", e.getMessage());
             return null;
