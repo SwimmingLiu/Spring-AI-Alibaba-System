@@ -67,3 +67,4 @@ oss:
     access-key: ${qiniuyun.access-key}
     secret-key: ${qiniuyun.secret-key}
     bucket: ${qiniuyun.bucket}
+    prefix-url: ${qiniuyun.prefix-url}

@@ -11,4 +11,5 @@ public class QiNiuCloudProperties {
     private String accessKey;
     private String secretKey;
     private String bucket;
+    private String prefixUrl;
 }
