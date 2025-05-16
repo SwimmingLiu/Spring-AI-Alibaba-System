@@ -11,7 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
-import static com.swimmingliu.common.constants.BaseConstants.DEFAULT_QUESTION_PROMPT;
+import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_QUESTION_PROMPT;
 import static com.swimmingliu.common.utils.AIChatUtil.*;
 
 @RestController

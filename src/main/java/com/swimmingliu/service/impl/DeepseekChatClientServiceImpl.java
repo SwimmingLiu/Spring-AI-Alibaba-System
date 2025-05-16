@@ -3,17 +3,17 @@ package com.swimmingliu.service.impl;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatModel;
 import com.alibaba.cloud.ai.dashscope.chat.DashScopeChatOptions;
 import com.swimmingliu.common.properties.DashscopeDeepseekProperties;
+import com.swimmingliu.common.utils.FileUtil;
 import com.swimmingliu.service.ChatClientService;
+import jakarta.annotation.Resource;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
-import static com.swimmingliu.common.constants.BaseConstants.*;
-import static com.swimmingliu.common.utils.AIChatUtil.getDocumentText;
+import static com.swimmingliu.common.constants.PromptConstants.*;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
@@ -22,6 +22,9 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
     public final DashscopeDeepseekProperties deepseekProperties;
     public final ChatClient deepSeekChatClient;
     public final ChatMemory redisChatMemory;
+    @Resource
+    private FileUtil fileUtil;
+
 
     public DeepseekChatClientServiceImpl(DashscopeDeepseekProperties deepseekProperties,
                                          DashScopeChatModel chatModel,
@@ -65,8 +68,8 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
     }
 
     @Override
-    public String askWithFile(String question, String chatId, MultipartFile file) {
-        String documentText = getDocumentText(file);
+    public String askWithFile(String question, String chatId, String fileUrl) {
+        String documentText = fileUtil.getDocumentText(fileUrl);
         return deepSeekChatClient.prompt(question)
                 .advisors(x -> x
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
@@ -79,8 +82,8 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
     }
 
     @Override
-    public Flux<String> askStreamWithFile(String question, String chatId, MultipartFile file) {
-        String documentText = getDocumentText(file);
+    public Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) {
+        String documentText = fileUtil.getDocumentText(fileUrl);
         return this.deepSeekChatClient.prompt(question)
                 .advisors(x -> x
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)

@@ -9,10 +9,12 @@ import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.swimmingliu.common.constants.RegexConstants.OSS_FILE_SOURCE;
 import static com.swimmingliu.common.utils.RandomUtil.generateChatId;
 
 public class AIChatUtil {
@@ -71,12 +73,5 @@ public class AIChatUtil {
      */
     public static String ensureChatId(String chatId) {
         return !StringUtils.hasText(chatId) ? String.valueOf(generateChatId()) : chatId;
-    }
-
-    public static String getDocumentText(MultipartFile file){
-        List<Document> documents = new TikaDocumentReader(file.getResource()).get();
-        return documents.stream()
-                .map(Document::getFormattedContent)
-                .collect(Collectors.joining("\n\n"));
     }
 }

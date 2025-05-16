@@ -2,7 +2,6 @@ package com.swimmingliu.controller;
 
 import com.swimmingliu.common.enums.FileChatTypeEnum;
 import com.swimmingliu.common.response.Result;
-import com.swimmingliu.common.utils.QiNiuCloudOSSUtil;
 import com.swimmingliu.service.ChatClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,10 +12,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
-import static com.swimmingliu.common.constants.BaseConstants.DEFAULT_QUESTION_PROMPT;
+import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_QUESTION_PROMPT;
 import static com.swimmingliu.common.utils.AIChatUtil.*;
 
 @RestController
@@ -30,9 +28,6 @@ public class DeepseekFileController {
     @Resource
     private ChatClientService deepseekReasonClientService;
 
-    @Resource
-    private QiNiuCloudOSSUtil qiNiuCloudOSSUtil;
-
     @GetMapping("/chat")
     @Operation(summary = "统一对话接口")
     public Result chat(
@@ -44,11 +39,10 @@ public class DeepseekFileController {
         chatId = ensureChatId(chatId);
         String answer;
         boolean thinkStatus = false;
-        MultipartFile file = qiNiuCloudOSSUtil.getMultipartFileFromUrl(fileUrl);
         switch (chatType) {
-            case CHAT -> answer = deepseekChatClientService.askWithFile(question, chatId, file);
+            case CHAT -> answer = deepseekChatClientService.askWithFile(question, chatId, fileUrl);
             case REASON -> {
-                answer = deepseekReasonClientService.askWithFile(question, chatId, file);
+                answer = deepseekReasonClientService.askWithFile(question, chatId, fileUrl);
                 thinkStatus = true;
             }
             default -> throw new IllegalArgumentException("Unsupported chat type");
@@ -68,11 +62,10 @@ public class DeepseekFileController {
         chatId = ensureChatId(chatId);
         Flux<String> stream;
         boolean thinkStatus = false;
-        MultipartFile file = qiNiuCloudOSSUtil.getMultipartFileFromUrl(fileUrl);
         switch (chatType) {
-            case CHAT -> stream = deepseekChatClientService.askStreamWithFile(question, chatId, file);
+            case CHAT -> stream = deepseekChatClientService.askStreamWithFile(question, chatId, fileUrl);
             case REASON -> {
-                stream = deepseekReasonClientService.askStreamWithFile(question, chatId, file);
+                stream = deepseekReasonClientService.askStreamWithFile(question, chatId, fileUrl);
                 thinkStatus = true;
             }
             default -> throw new IllegalArgumentException("Unsupported chat type");
