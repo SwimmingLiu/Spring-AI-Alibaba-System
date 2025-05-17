@@ -38,23 +38,23 @@ public class RedisChatMemory implements ChatMemory, AutoCloseable {
 
 	private static final int DEFAULT_EXPIRY_SECONDS = 24 * 60 * 60;
 
+	private static final int DEFAULT_TIME_OUT = 2000;
+
 	private final JedisPool jedisPool;
 
 	private final Jedis jedis;
 
 	private final ObjectMapper objectMapper;
 
-	public RedisChatMemory(String host, int port, String password) {
+	public RedisChatMemory(String host, int port, String password, Integer database) {
 
 		JedisPoolConfig poolConfig = new JedisPoolConfig();
-
-		this.jedisPool = new JedisPool(poolConfig, host, port, 2000, password);
+		this.jedisPool = new JedisPool(poolConfig, host, port, DEFAULT_TIME_OUT, password, database);
 		this.jedis = jedisPool.getResource();
 		this.objectMapper = new ObjectMapper();
 		SimpleModule module = new SimpleModule();
 		module.addDeserializer(Message.class, new MessageDeserializer());
 		this.objectMapper.registerModule(module);
-
 		logger.info("Connected to Redis at {}:{}", host, port);
 	}
 
@@ -148,7 +148,6 @@ public class RedisChatMemory implements ChatMemory, AutoCloseable {
 		try {
 			this.jedis.del(key);
 			this.jedis.rpush(key, new String[]{messages});
-			// 设置过期时间
 			this.jedis.expire(key, DEFAULT_EXPIRY_SECONDS);
 		} catch (Exception e) {
 			logger.error("Error updating messages from Redis chat memory", e);

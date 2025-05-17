@@ -33,7 +33,8 @@ public class ChatMemoryConfig {
 		return new RedisChatMemory(
 				redisProperties.getHost(),
 				redisProperties.getPort(),
-				redisProperties.getPassword()
+				redisProperties.getPassword(),
+				redisProperties.getDatabase()
 		);
 	}
 }

@@ -13,5 +13,6 @@ import org.springframework.stereotype.Component;
 public class RedisProperties {
     private String host;
     private Integer port;
-    private String password;
+    private String password = null;
+    private Integer database = 0;
 }
