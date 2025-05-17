@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 
+import static com.swimmingliu.common.constants.BaseConstants.CHAT_MEMORY_RETRIEVE_SIZE;
 import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_REASON_SETTING_PROMPT;
 import static com.swimmingliu.common.constants.PromptConstants.DOCUMENT_RAG_PROMPT;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
@@ -59,7 +60,7 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
         return deepseekChatClient.prompt(question)
                 .advisors(x -> x
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
                 .call()
                 .content();
     }
@@ -69,7 +70,7 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
         return this.deepseekChatClient.prompt(question)
                 .advisors(x -> x
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
                 .stream()
                 .content();
     }
@@ -80,7 +81,7 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
         return deepseekChatClient.prompt(question)
                 .advisors(x -> x
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
                 .system(systemSpec ->
                         systemSpec.text(DOCUMENT_RAG_PROMPT).param("document", documentText)
                 )
@@ -94,7 +95,7 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
         return this.deepseekChatClient.prompt(question)
                 .advisors(x -> x
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, 100))
+                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
                 .system(systemSpec ->
                         systemSpec.text(DOCUMENT_RAG_PROMPT).param("document", documentText)
                 )
