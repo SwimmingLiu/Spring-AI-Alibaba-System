@@ -14,6 +14,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
+
 import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_REASON_SETTING_PROMPT;
 import static com.swimmingliu.common.constants.PromptConstants.DOCUMENT_RAG_PROMPT;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
@@ -73,7 +75,7 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
     }
 
     @Override
-    public String askWithFile(String question, String chatId, String fileUrl) {
+    public String askWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
         String documentText = fileUtil.getDocumentText(fileUrl);
         return deepseekChatClient.prompt(question)
                 .advisors(x -> x
@@ -87,7 +89,7 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
     }
 
     @Override
-    public Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) {
+    public Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
         String documentText = fileUtil.getDocumentText(fileUrl);
         return this.deepseekChatClient.prompt(question)
                 .advisors(x -> x

@@ -28,6 +28,9 @@ public class FileUtil {
     @Resource
     private QiNiuCloudOSSUtil qiNiuCloudOSSUtil;
 
+    @Resource
+    private LlamaParserOCRUtil llamaParserOCRUtil;
+
     private static final Tika tika = new Tika();
 
     /**
@@ -68,7 +71,7 @@ public class FileUtil {
      * @param fileUrl
      * @return
      */
-    public String getDocumentText(String fileUrl) {
+    public String getDocumentText(String fileUrl) throws IOException, InterruptedException {
         String documentText;
         if (isImageUrl(fileUrl)) {
             documentText = getDocumentTextByOCR(fileUrl);
@@ -76,8 +79,7 @@ public class FileUtil {
             MultipartFile file = qiNiuCloudOSSUtil.getMultipartFileFromUrl(fileUrl);
             documentText = getDocumentTextByFile(file);
             if (isEmptyContent(documentText)) {
-                // TODO 通过 LlamaParser 获取PDF等文档中的内容
-                documentText = "";
+                documentText = llamaParserOCRUtil.parseFile(file);
             }
         }
         return Objects.isNull(documentText) ? "" : documentText;

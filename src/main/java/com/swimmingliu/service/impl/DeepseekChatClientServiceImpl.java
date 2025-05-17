@@ -13,6 +13,8 @@ import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
+
 import static com.swimmingliu.common.constants.PromptConstants.*;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
@@ -68,7 +70,7 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
     }
 
     @Override
-    public String askWithFile(String question, String chatId, String fileUrl) {
+    public String askWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
         String documentText = fileUtil.getDocumentText(fileUrl);
         return deepSeekChatClient.prompt(question)
                 .advisors(x -> x
@@ -82,7 +84,7 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
     }
 
     @Override
-    public Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) {
+    public Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
         String documentText = fileUtil.getDocumentText(fileUrl);
         return this.deepSeekChatClient.prompt(question)
                 .advisors(x -> x
