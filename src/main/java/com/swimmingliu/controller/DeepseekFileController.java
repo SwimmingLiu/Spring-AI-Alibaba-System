@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 
+import java.io.IOException;
+
 import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_QUESTION_PROMPT;
 import static com.swimmingliu.common.utils.AIChatUtil.*;
 
@@ -35,7 +37,7 @@ public class DeepseekFileController {
             @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
             @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
             @Parameter(description = "对话类型", required = true) FileChatTypeEnum chatType,
-            @Parameter(description = "附件URL", required = true) String fileUrl) {
+            @Parameter(description = "附件URL", required = true) String fileUrl) throws IOException, InterruptedException {
         chatId = ensureChatId(chatId);
         String answer;
         boolean thinkStatus = false;
@@ -58,7 +60,7 @@ public class DeepseekFileController {
             @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
             @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
             @Parameter(description = "对话类型", required = true) FileChatTypeEnum chatType,
-            @Parameter(description = "附件URL", required = true) String fileUrl) {
+            @Parameter(description = "附件URL", required = true) String fileUrl) throws IOException, InterruptedException {
         chatId = ensureChatId(chatId);
         Flux<String> stream;
         boolean thinkStatus = false;

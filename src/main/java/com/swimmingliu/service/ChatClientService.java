@@ -1,7 +1,7 @@
 package com.swimmingliu.service;
 
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
+import java.io.IOException;
 
 public interface ChatClientService {
     /**
@@ -32,7 +32,7 @@ public interface ChatClientService {
      * @param fileUrl
      * @return
      */
-    default String askWithFile(String question, String chatId, String fileUrl) {return "";};
+    default String askWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {return "";};
 
     /**
      * 提问-文档检索 - 流式回复
@@ -41,5 +41,5 @@ public interface ChatClientService {
      * @param fileUrl
      * @return
      */
-    default Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) {return Flux.empty();};
+    default Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {return Flux.empty();};
 }

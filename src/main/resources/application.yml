@@ -60,6 +60,7 @@ memory:
     host: ${redis.host}
     port: ${redis.port}
     password: ${redis.password}
+    database: ${redis.database}
 
 # OSS 文件上传
 oss:
