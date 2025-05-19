@@ -3,18 +3,13 @@ package com.swimmingliu.common.utils;
 import com.alibaba.nacos.common.utils.StringUtils;
 import com.swimmingliu.common.response.Result;
 import com.swimmingliu.model.vo.AIChatVO;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.reader.tika.TikaDocumentReader;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-import static com.swimmingliu.common.constants.RegexConstants.OSS_FILE_SOURCE;
+import static com.swimmingliu.common.constants.BaseConstants.STREAM_OUTPUT_NORMAL_SPACE;
+import static com.swimmingliu.common.constants.BaseConstants.STREAM_OUTPUT_SPECIAL_SPACE;
 import static com.swimmingliu.common.utils.RandomUtil.generateChatId;
 
 public class AIChatUtil {
@@ -57,11 +52,12 @@ public class AIChatUtil {
      */
     public static Flux<String> buildStreamResult(Flux<String> stream, String chatId, boolean thinkStatus) {
         return stream.map(text -> {
+            // 将普通空格替换为不间断空格
+            String processedText = text.replace(STREAM_OUTPUT_NORMAL_SPACE, STREAM_OUTPUT_SPECIAL_SPACE);
             AIChatVO.AIChatVOBuilder builder = AIChatVO.builder()
                     .chatId(chatId)
                     .thinkStatus(thinkStatus);
-
-            processThinkContent(builder, text, thinkStatus);
+            processThinkContent(builder, processedText, thinkStatus);
             return Result.ok()
                     .data(builder.build())
                     .toString();
