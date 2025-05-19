@@ -16,6 +16,7 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 
+import static com.swimmingliu.common.constants.MessageConstants.UNSUPPORTED_CHAT_TYPE;
 import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_QUESTION_PROMPT;
 import static com.swimmingliu.common.utils.AIChatUtil.*;
 
@@ -47,7 +48,7 @@ public class DeepseekFileController {
                 answer = deepseekReasonClientService.askWithFile(question, chatId, fileUrl);
                 thinkStatus = true;
             }
-            default -> throw new IllegalArgumentException("Unsupported chat type");
+            default -> throw new IllegalArgumentException(UNSUPPORTED_CHAT_TYPE);
         }
 
         return Result.ok().data(buildChatVO(chatId, answer, thinkStatus));
@@ -70,7 +71,7 @@ public class DeepseekFileController {
                 stream = deepseekReasonClientService.askStreamWithFile(question, chatId, fileUrl);
                 thinkStatus = true;
             }
-            default -> throw new IllegalArgumentException("Unsupported chat type");
+            default -> throw new IllegalArgumentException(UNSUPPORTED_CHAT_TYPE);
         }
 
         return buildStreamResult(stream, chatId, thinkStatus);

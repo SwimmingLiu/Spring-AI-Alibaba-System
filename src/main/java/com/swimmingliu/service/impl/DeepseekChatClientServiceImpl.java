@@ -17,6 +17,7 @@ import java.io.IOException;
 
 import static com.swimmingliu.common.constants.BaseConstants.CHAT_MEMORY_RETRIEVE_SIZE;
 import static com.swimmingliu.common.constants.PromptConstants.*;
+import static com.swimmingliu.common.constants.PromptParamConstants.CONTEXT_DOCUMENT;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
 
@@ -78,7 +79,7 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
                 .system(systemSpec ->
-                        systemSpec.text(DOCUMENT_RAG_PROMPT).param("document", documentText)
+                        systemSpec.text(DOCUMENT_RAG_PROMPT).param(CONTEXT_DOCUMENT, documentText)
                 )
                 .call()
                 .content();
@@ -92,7 +93,7 @@ public class DeepseekChatClientServiceImpl implements ChatClientService {
                         .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
                         .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
                 .system(systemSpec ->
-                        systemSpec.text(DOCUMENT_RAG_PROMPT).param("document", documentText)
+                        systemSpec.text(DOCUMENT_RAG_PROMPT).param(CONTEXT_DOCUMENT, documentText)
                 )
                 .stream()
                 .content();
