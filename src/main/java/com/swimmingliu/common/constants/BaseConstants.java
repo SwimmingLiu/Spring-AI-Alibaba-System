@@ -7,4 +7,7 @@ public interface BaseConstants {
     String DEFAULT_OCR_TYPE = "Advanced";
     // AI对话上下文轮次大小
     Integer CHAT_MEMORY_RETRIEVE_SIZE = 100;
+    // 流式输出空格处理
+    String STREAM_OUTPUT_NORMAL_SPACE = " ";
+    String STREAM_OUTPUT_SPECIAL_SPACE = "\u00A0";
 }

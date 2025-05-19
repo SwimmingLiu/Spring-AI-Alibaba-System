@@ -7,10 +7,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
+import static com.swimmingliu.common.constants.MessageConstants.UNSUPPORTED_CHAT_TYPE;
 import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_QUESTION_PROMPT;
 import static com.swimmingliu.common.utils.AIChatUtil.*;
 
@@ -35,9 +37,9 @@ public class DeepseekChatController {
     @Operation(summary = "统一对话接口")
     public Result chat(
             @Parameter(description = "请输入您需要提问的问题", required = true)
-            @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
+            @NotNull @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
             @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
-            @Parameter(description = "对话类型", required = true) ChatTypeEnum chatType) {
+            @NotNull  @Parameter(description = "对话类型", required = true) ChatTypeEnum chatType) {
         chatId = ensureChatId(chatId);
         String answer;
         boolean thinkStatus = false;
@@ -57,7 +59,7 @@ public class DeepseekChatController {
                         deepseekReasonClientService.ask(question, chatId);
                 thinkStatus = true;
             }
-            default -> throw new IllegalArgumentException("Unsupported chat type");
+            default -> throw new IllegalArgumentException(UNSUPPORTED_CHAT_TYPE);
         }
         return Result.ok().data(buildChatVO(chatId, answer, thinkStatus));
     }
@@ -65,10 +67,10 @@ public class DeepseekChatController {
     @GetMapping(value = "/stream/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "统一对话接口-流式")
     public Flux<String> streamChat(
-            @Parameter(description = "请输入您需要提问的问题", required = true)
+            @NotNull @Parameter(description = "请输入您需要提问的问题", required = true)
             @RequestParam(value = "question", defaultValue = DEFAULT_QUESTION_PROMPT) String question,
             @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
-            @Parameter(description = "对话类型", required = true) ChatTypeEnum chatType) {
+            @NotNull @Parameter(description = "对话类型", required = true) ChatTypeEnum chatType) {
         chatId = ensureChatId(chatId);
         Flux<String> stream;
         boolean thinkStatus = false;
@@ -88,7 +90,7 @@ public class DeepseekChatController {
                         deepseekReasonClientService.askStream(question, chatId);
                 thinkStatus = true;
             }
-            default -> throw new IllegalArgumentException("Unsupported chat type");
+            default -> throw new IllegalArgumentException(UNSUPPORTED_CHAT_TYPE);
         }
 
         return buildStreamResult(stream, chatId, thinkStatus);
