@@ -1,25 +1,14 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.swimmingliu.rag.prompt;
 
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+/**
+*   @author SwimmingLiu
+*   @date 2025-06-03 16:24
+*   @description: 
+*/
 
 
 @Configuration
@@ -52,9 +41,15 @@ public class PromptTemplateConfig {
 
 		return new PromptTemplate(
 				"""
+				IMPORTANT: If any source link is null or empty, please follow these rulse:
+				1. Exclude that reference contents (reference number and source link) completely from both the answer text and references section.
+				2. Ignore all rules related to the reference number and source link.
+				3. Do not include any reference number or source link in the answer text and references section.
+				4. Do not tell us that you finished the task.
+				
 				You'll get a set of document contexts that are relevant to the issue.
-				Each document begins with a reference number and source link, such as [[x]], where x is a number that can be repeated, **followed by (source_url)**.
-				Documents that are not referenced will be marked as [[null]].
+				Each document begins with a reference number and source link, such as [x](source_link), where x is a number that can be repeated.
+				Documents that are not referenced will be not marked.
 				Use context and refer to it at the end of each sentence, if applicable.
 				The context information is as follows:
 				
@@ -74,12 +69,12 @@ public class PromptTemplateConfig {
 				6. When generating a response, provide a clear conclusion or main idea first, without a title;
 				7. Make sure each section has a clear subtitle so that users can better understand and refer to your output;
 				8. If the information is complex or contains multiple sections, make sure each section has an appropriate heading to create a hierarchical structure;
-				9. Please refer to the sentence or section with **the reference number and source link** at the end in **[[x](source_url)]** format;
-				10. If a sentence or section comes from more than one context, list all applicable references, e.g. **[[x](source_url)] [[y](source_url)]**;
+				9. Please refer to the sentence or section with the reference number at the end in **[x]** format;
+				10. If a sentence or section comes from more than one context, list all applicable references, e.g. **[x][y]**;
 				11. Your output answers must be in beautiful and rigorous markdown format.
-				12. **Ensure all source links are valid URLs and properly formatted as markdown hyperlinks**;
-				13. If a reference is marked as [[null]], it does not have to be cited;
-				14. Except for Code. Aside from the specific name and citation, your answer must be written in the same language as the question.
+				12. Ensure all source links are valid URLs and properly formatted as markdown hyperlinks;
+				13. Except for Code. Aside from the specific name and citation, your answer must be written in the same language as the question;
+				14. At the end of your answer, add a references section that lists all sources in numerical order in the format: **[x]** source link.
 				
 				User Issue:
 				

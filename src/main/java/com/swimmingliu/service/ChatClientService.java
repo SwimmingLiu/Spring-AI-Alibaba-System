@@ -2,6 +2,7 @@ package com.swimmingliu.service;
 
 import reactor.core.publisher.Flux;
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 
 public interface ChatClientService {
     /**
@@ -42,4 +43,12 @@ public interface ChatClientService {
      * @return
      */
     default Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {return Flux.empty();};
+
+    /**
+     * 异步提问
+     * @param question
+     * @param chatId
+     * @return
+     */
+    CompletableFuture<String> askAsync(String question, String chatId);
 }

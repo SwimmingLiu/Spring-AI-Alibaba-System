@@ -8,19 +8,24 @@ import com.swimmingliu.rag.data.DataClean;
 import com.swimmingliu.rag.join.ConcatenationDocumentJoiner;
 import com.swimmingliu.rag.prompt.CustomContextQueryAugmenter;
 import com.swimmingliu.service.ChatClientService;
-import org.springframework.ai.chat.client.advisor.RetrievalAugmentationAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.ai.rag.postretrieval.ranking.DocumentRanker;
+import org.springframework.ai.rag.advisor.RetrievalAugmentationAdvisor;
+import org.springframework.ai.rag.postretrieval.document.DocumentPostProcessor;
 import org.springframework.ai.rag.preretrieval.query.expansion.QueryExpander;
 import org.springframework.ai.rag.preretrieval.query.transformation.QueryTransformer;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import static com.swimmingliu.common.constants.BaseConstants.CHAT_MEMORY_RETRIEVE_SIZE;
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
+import static com.swimmingliu.common.constants.WebSearchConstants.WEB_SEARCH_MAX_RESULT;
+
+/**
+*   @author SwimmingLiu
+*   @date 2025-06-03 16:27
+*   @description: 网络搜索功能 (deepseek-r1)
+*/
+
 
 @Service("deepseekWebSearchReasonClientService")
 public class DeepseekWebSearchReasonClientServiceImpl extends DeepseekReasonClientServiceImpl implements ChatClientService {
@@ -39,7 +44,7 @@ public class DeepseekWebSearchReasonClientServiceImpl extends DeepseekReasonClie
                                                     DataClean dataCleaner,
                                                     QueryExpander queryExpander,
                                                     IQSSearchEngine searchEngine,
-                                                    DocumentRanker documentRanker,
+                                                    DocumentPostProcessor documentRanker,
                                                     QueryTransformer queryTransformer,
                                                     @Qualifier("queryArgumentPromptTemplate") PromptTemplate queryArgumentPromptTemplate) {
         super(deepseekProperties, chatModel, redisChatMemory);
@@ -49,7 +54,7 @@ public class DeepseekWebSearchReasonClientServiceImpl extends DeepseekReasonClie
         this.webSearchRetriever = WebSearchRetriever.builder()
                 .searchEngine(searchEngine)
                 .dataCleaner(dataCleaner)
-                .maxResults(2)
+                .maxResults(WEB_SEARCH_MAX_RESULT)
                 .enableRanker(true)
                 .documentRanker(documentRanker)
                 .build();
@@ -61,12 +66,11 @@ public class DeepseekWebSearchReasonClientServiceImpl extends DeepseekReasonClie
      * @return
      */
     @Override
-    public String ask(String prompt, String chatId) {
+    public String doAsk(String prompt, String chatId) {
         return deepseekChatClient.prompt()
                 .advisors(createRetrievalAugmentationAdvisor())
                 .advisors(x -> x
-                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
+                        .param(ChatMemory.CONVERSATION_ID, chatId))
                 .user(prompt)
                 .call()
                 .content();
@@ -78,12 +82,11 @@ public class DeepseekWebSearchReasonClientServiceImpl extends DeepseekReasonClie
      * @return
      */
     @Override
-    public Flux<String> askStream(String prompt, String chatId) {
+    public Flux<String> doAskStream(String prompt, String chatId) {
         return deepseekChatClient.prompt()
                 .advisors(createRetrievalAugmentationAdvisor())
                 .advisors(x -> x
-                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
+                        .param(ChatMemory.CONVERSATION_ID, chatId))
                 .user(prompt)
                 .stream()
                 .content();

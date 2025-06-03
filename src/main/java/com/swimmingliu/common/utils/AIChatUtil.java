@@ -68,6 +68,15 @@ public class AIChatUtil {
      * 确保chatId不为空
      */
     public static String ensureChatId(String chatId) {
-        return !StringUtils.hasText(chatId) ? String.valueOf(generateChatId()) : chatId;
+        return  !isChatIdValid(chatId) ? String.valueOf(generateChatId()) : chatId;
+    }
+
+    /**
+     * 检查chatId是否有效
+     * @param chatId
+     * @return
+     */
+    public static Boolean isChatIdValid(String chatId) {
+        return StringUtils.isNotBlank(chatId) && chatId.matches("\\d+");
     }
 }

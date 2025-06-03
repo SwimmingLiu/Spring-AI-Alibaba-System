@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,12 +19,21 @@ import java.io.IOException;
 
 import static com.swimmingliu.common.constants.MessageConstants.UNSUPPORTED_CHAT_TYPE;
 import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_QUESTION_PROMPT;
-import static com.swimmingliu.common.utils.AIChatUtil.*;
+import static com.swimmingliu.common.utils.AIChatUtil.buildChatVO;
+import static com.swimmingliu.common.utils.AIChatUtil.buildStreamResult;
+
+/**
+*   @author SwimmingLiu
+*   @date 2025-06-03 17:52
+*   @description: 文件对话接口
+*/
+
 
 @RestController
 @RequestMapping("/deepseek/file")
+@Slf4j
 @Tag(name = "Deepseek文件对话接口", description = "DeepSeek File Chat Model API")
-public class DeepseekFileController {
+public class DeepseekFileController extends BaseChatController {
 
     @Resource
     private ChatClientService deepseekChatClientService;
@@ -39,7 +49,9 @@ public class DeepseekFileController {
             @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
             @Parameter(description = "对话类型", required = true) FileChatTypeEnum chatType,
             @Parameter(description = "附件URL", required = true) String fileUrl) throws IOException, InterruptedException {
-        chatId = ensureChatId(chatId);
+        boolean isReason = chatType.equals(FileChatTypeEnum.REASON);
+        chatId = validateAndInitializeChatId(chatId, isReason, deepseekReasonClientService, deepseekChatClientService);
+
         String answer;
         boolean thinkStatus = false;
         switch (chatType) {
@@ -62,7 +74,9 @@ public class DeepseekFileController {
             @Parameter(description = "当前对话ID (首次请求可不填)") String chatId,
             @Parameter(description = "对话类型", required = true) FileChatTypeEnum chatType,
             @Parameter(description = "附件URL", required = true) String fileUrl) throws IOException, InterruptedException {
-        chatId = ensureChatId(chatId);
+        boolean isReason = chatType.equals(FileChatTypeEnum.REASON);
+        chatId = validateAndInitializeChatId(chatId, isReason, deepseekReasonClientService, deepseekChatClientService);
+
         Flux<String> stream;
         boolean thinkStatus = false;
         switch (chatType) {

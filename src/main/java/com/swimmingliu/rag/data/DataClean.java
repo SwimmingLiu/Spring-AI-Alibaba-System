@@ -1,171 +1,165 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.swimmingliu.rag.data;
 
+
+import com.swimmingliu.common.constants.MessageConstants;
 import com.swimmingliu.common.exception.BizException;
 import com.swimmingliu.model.entity.websearch.GenericSearchResult;
+import com.swimmingliu.model.entity.websearch.SceneItem;
 import com.swimmingliu.model.entity.websearch.ScorePageItem;
+import org.springframework.ai.content.Media;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.model.Media;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MimeType;
 
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
 
+import static com.swimmingliu.common.constants.RagConstants.*;
+
 /**
- * @author yuluo
- * @author <a href="mailto:yuluo08290126@gmail.com">yuluo</a>
- *
- * Data Cleansing: Filters out useless data and converts it into Spring AI's Document objects
- */
+*   @author SwimmingLiu
+*   @date 2025-06-03 16:21
+*   @description: 数据清理类
+*/
+
 
 @Component
 public class DataClean {
+	/**
+	 * 获取清理后的数据
+	 * @param respData
+	 * @return
+	 * @throws URISyntaxException
+	 */
+    public List<Document> getData(GenericSearchResult respData) throws URISyntaxException {
+        List<Document> documents = new ArrayList<>();
+        Map<String, Object> metadata = getQueryMetadata(respData);
+        // 处理场景类型 (时间、天气)
+        if (!respData.getSceneItems().isEmpty()) {
+            for (SceneItem sceneItem : respData.getSceneItems()) {
+                Map<String, Object> sceneItemMetadata = getSceneItemMetadata(sceneItem);
+                Document document = new Document.Builder()
+                        .metadata(metadata)
+                        .metadata(sceneItemMetadata)
+                        .text(sceneItem.getDetail())
+                        .build();
+                documents.add(document);
+            }
+            return documents;
+        }
 
-	public List<Document> getData(GenericSearchResult respData) {
+        for (ScorePageItem pageItem : respData.getPageItems()) {
+            Map<String, Object> pageItemMetadata = getPageItemMetadata(pageItem);
+            Double score = getScore(pageItem);
+            String text = getText(pageItem);
 
-		List<Document> documents = new ArrayList<>();
+            if (Objects.equals(EMPTY_STRING, text)) {
+                Media media = getMedia(pageItem);
+                Document document = new Document.Builder()
+                        .metadata(metadata)
+                        .metadata(pageItemMetadata)
+                        .media(media)
+                        .score(score)
+                        .build();
+                documents.add(document);
+                break;
+            }
 
-		Map<String, Object> metadata = getQueryMetadata(respData);
+            Document document = new Document.Builder()
+                    .metadata(metadata)
+                    .metadata(pageItemMetadata)
+                    .text(text)
+                    .score(score)
+                    .build();
+            documents.add(document);
+        }
 
-		for (ScorePageItem pageItem : respData.getPageItems()) {
+        return documents;
+    }
 
-			Map<String, Object> pageItemMetadata = getPageItemMetadata(pageItem);
-			Double score = getScore(pageItem);
-			String text = getText(pageItem);
+    private Double getScore(ScorePageItem pageItem) {
+        return pageItem.getScore();
+    }
 
-			if (Objects.equals("", text)) {
+    private Map<String, Object> getQueryMetadata(GenericSearchResult respData) {
+        Map<String, Object> docsMetadata = new HashMap<>();
 
-				Media media = getMedia(pageItem);
-				Document document = new Document.Builder()
-						.metadata(metadata)
-						.metadata(pageItemMetadata)
-						.media(media)
-						.score(score)
-						.build();
+        if (Objects.nonNull(respData.getQueryContext())) {
+            docsMetadata.put(METADATA_QUERY, respData.getQueryContext().getOriginalQuery().getQuery());
 
-				documents.add(document);
-				break;
-			}
+            if (Objects.nonNull(respData.getQueryContext().getOriginalQuery().getTimeRange())) {
+                docsMetadata.put(METADATA_TIME_RANGE, respData.getQueryContext().getOriginalQuery().getTimeRange());
+                docsMetadata.put(METADATA_FILTERS, respData.getQueryContext().getOriginalQuery().getTimeRange());
+            }
+        }
 
-			Document document = new Document.Builder()
-					.metadata(metadata)
-					.metadata(pageItemMetadata)
-					.text(text)
-					.score(score)
-					.build();
+        return docsMetadata;
+    }
 
-			documents.add(document);
-		}
+    private Map<String, Object> getSceneItemMetadata(SceneItem sceneItem) {
+        Map<String, Object> sceneItemMetadata = new HashMap<>();
 
-		return documents;
-	}
+        if (Objects.nonNull(sceneItem)) {
+            if (Objects.nonNull(sceneItem.getDetail())) {
+                sceneItemMetadata.put(METADATA_DETAIL, sceneItem.getDetail());
+            }
+            if (Objects.nonNull(sceneItem.getType())) {
+                sceneItemMetadata.put(METADATA_TYPE, sceneItem.getType());
+            }
+        }
 
-	private Double getScore(ScorePageItem pageItem) {
+        return sceneItemMetadata;
+    }
 
-		return pageItem.getScore();
-	}
+    private Map<String, Object> getPageItemMetadata(ScorePageItem pageItem) {
+        Map<String, Object> pageItemMetadata = new HashMap<>();
 
-	private Map<String, Object> getQueryMetadata(GenericSearchResult respData) {
+        if (Objects.nonNull(pageItem)) {
+            if (Objects.nonNull(pageItem.getHostname())) {
+                pageItemMetadata.put(METADATA_HOSTNAME, pageItem.getHostname());
+            }
+            if (Objects.nonNull(pageItem.getHtmlSnippet())) {
+                pageItemMetadata.put(METADATA_HTML_SNIPPET, pageItem.getHtmlSnippet());
+            }
+            if (Objects.nonNull(pageItem.getTitle())) {
+                pageItemMetadata.put(METADATA_TITLE, pageItem.getTitle());
+            }
+            if (Objects.nonNull(pageItem.getMarkdownText())) {
+                pageItemMetadata.put(METADATA_MARKDOWN_TEXT, pageItem.getMarkdownText());
+            }
+            if (Objects.nonNull(pageItem.getLink())) {
+                pageItemMetadata.put(METADATA_LINK, pageItem.getLink());
+            }
+        }
 
-		HashMap<String, Object> docsMetadata = new HashMap<>();
+        return pageItemMetadata;
+    }
 
-		if (Objects.nonNull(respData.getQueryContext())) {
-			docsMetadata.put("query", respData.getQueryContext().getOriginalQuery().getQuery());
+    private Media getMedia(ScorePageItem pageItem) throws URISyntaxException {
+        String mime = pageItem.getMime();
+        URL url;
+        try {
+            url = new URL(pageItem.getLink()).toURI().toURL();
+        }
+        catch (Exception e) {
+            throw new BizException(MessageConstants.ERROR_INVALID_URL + pageItem.getLink());
+        }
+        return new Media(MimeType.valueOf(mime), url.toURI());
+    }
 
-			if (Objects.nonNull(respData.getQueryContext().getOriginalQuery().getTimeRange())) {
-				docsMetadata.put("timeRange", respData.getQueryContext().getOriginalQuery().getTimeRange());
-			}
+    private String getText(ScorePageItem pageItem) {
+        if (Objects.nonNull(pageItem.getMainText())) {
+            String mainText = pageItem.getMainText();
+            mainText = mainText.replaceAll(REGEX_HTML_TAGS, EMPTY_STRING);
+            mainText = mainText.replaceAll(REGEX_WHITESPACE, REPLACE_WHITESPACE);
+            mainText = mainText.replaceAll(REGEX_INVISIBLE_CHARS, EMPTY_STRING);
+            return mainText.trim();
+        }
+        return EMPTY_STRING;
+    }
 
-			if (Objects.nonNull(respData.getQueryContext().getOriginalQuery().getTimeRange())) {
-				docsMetadata.put("filters", respData.getQueryContext().getOriginalQuery().getTimeRange());
-			}
-		}
-
-		return docsMetadata;
-	}
-
-	private Map<String, Object> getPageItemMetadata(ScorePageItem pageItem) {
-
-		HashMap<String, Object> pageItemMetadata = new HashMap<>();
-
-		if (Objects.nonNull(pageItem)) {
-
-			if (Objects.nonNull(pageItem.getHostname())) {
-				pageItemMetadata.put("hostname", pageItem.getHostname());
-			}
-
-			if (Objects.nonNull(pageItem.getHtmlSnippet())) {
-				pageItemMetadata.put("htmlSnippet", pageItem.getHtmlSnippet());
-			}
-
-			if (Objects.nonNull(pageItem.getTitle())) {
-				pageItemMetadata.put("title", pageItem.getTitle());
-			}
-
-			if (Objects.nonNull(pageItem.getMarkdownText())) {
-				pageItemMetadata.put("markdownText", pageItem.getMarkdownText());
-			}
-
-			if (Objects.nonNull(pageItem.getLink())) {
-				pageItemMetadata.put("link", pageItem.getLink());
-			}
-		}
-
-		return pageItemMetadata;
-	}
-
-	private Media getMedia(ScorePageItem pageItem) {
-
-		String mime = pageItem.getMime();
-		URL url;
-		try {
-			url = new URL(pageItem.getLink()).toURI().toURL();
-		}
-		catch (Exception e) {
-			throw new BizException("URL无效: " + pageItem.getLink());
-		}
-
-		return new Media(MimeType.valueOf(mime), url);
-	}
-
-	private String getText(ScorePageItem pageItem) {
-
-		if (Objects.nonNull(pageItem.getMainText())) {
-
-			String mainText = pageItem.getMainText();
-
-			mainText = mainText.replaceAll("<[^>]+>", "");
-			mainText = mainText.replaceAll("[\\n\\t\\r]+", " ");
-			mainText = mainText.replaceAll("[\\u200B-\\u200D\\uFEFF]", "");
-
-			return mainText.trim();
-		}
-
-		return "";
-	}
-
-	public List<Document> limitResults(List<Document> documents, int minResults) {
-
-		int limit = Math.min(documents.size(), minResults);
-
-		return documents.subList(0, limit);
-	}
-
+    public List<Document> limitResults(List<Document> documents, int minResults) {
+        return documents.subList(0, Math.min(documents.size(), minResults));
+    }
 }
