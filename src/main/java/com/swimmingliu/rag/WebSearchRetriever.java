@@ -1,20 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.swimmingliu.rag;
 
 import com.swimmingliu.model.entity.websearch.GenericSearchResult;
@@ -25,16 +8,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
-import org.springframework.ai.rag.postretrieval.ranking.DocumentRanker;
+import org.springframework.ai.rag.postretrieval.document.DocumentPostProcessor;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
 import org.springframework.lang.Nullable;
 
+import java.net.URISyntaxException;
 import java.util.List;
 
+
 /**
- * @author yuluo
- * @author <a href="mailto:yuluo08290126@gmail.com">yuluo</a>
- */
+*   @author SwimmingLiu
+*   @date 2025-06-03 16:19
+*   @description: 网页搜索检索器
+*/
+
 
 public class WebSearchRetriever implements DocumentRetriever {
 
@@ -46,7 +33,7 @@ public class WebSearchRetriever implements DocumentRetriever {
 
 	private final DataClean dataCleaner;
 
-	private final DocumentRanker documentRanker;
+	private final DocumentPostProcessor documentPostProcessor;
 
 	private final boolean enableRanker;
 
@@ -55,7 +42,7 @@ public class WebSearchRetriever implements DocumentRetriever {
 		this.searchEngine = builder.searchEngine;
 		this.maxResults = builder.maxResults;
 		this.dataCleaner = builder.dataCleaner;
-		this.documentRanker = builder.documentRanker;
+		this.documentPostProcessor = builder.documentPostProcessor;
 		this.enableRanker = builder.enableRanker;
 	}
 
@@ -69,8 +56,13 @@ public class WebSearchRetriever implements DocumentRetriever {
 		GenericSearchResult searchResp = searchEngine.search(query.text());
 
 		// 清洗数据
-		List<Document> cleanerData = dataCleaner.getData(searchResp);
-		logger.debug("cleaner data: {}", cleanerData);
+        List<Document> cleanerData = null;
+        try {
+            cleanerData = dataCleaner.getData(searchResp);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        logger.debug("cleaner data: {}", cleanerData);
 
 		// 返回结果
 		List<Document> documents = dataCleaner.limitResults(cleanerData, maxResults);
@@ -92,7 +84,7 @@ public class WebSearchRetriever implements DocumentRetriever {
 
 		try {
 
-			List<Document> rankedDocuments = documentRanker.rank(query, documents);
+			List<Document> rankedDocuments = documentPostProcessor.process(query, documents);
 			logger.debug("WebSearchRetriever#ranking() Ranked documents: {}", rankedDocuments.stream().map(Document::getId).toArray());
 			return rankedDocuments;
 		} catch (Exception e) {
@@ -115,7 +107,7 @@ public class WebSearchRetriever implements DocumentRetriever {
 
 		private DataClean dataCleaner;
 
-		private DocumentRanker documentRanker;
+		private DocumentPostProcessor documentPostProcessor;
 
 		// 默认开启 ranking
 		private Boolean enableRanker = true;
@@ -138,8 +130,8 @@ public class WebSearchRetriever implements DocumentRetriever {
 			return this;
 		}
 
-		public Builder documentRanker(DocumentRanker documentRanker) {
-			this.documentRanker = documentRanker;
+		public Builder documentRanker(DocumentPostProcessor documentPostProcessor) {
+			this.documentPostProcessor = documentPostProcessor;
 			return this;
 		}
 

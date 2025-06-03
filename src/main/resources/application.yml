@@ -30,6 +30,60 @@ spring:
       chat:
           embedding:
             enabled: false
+  datasource: # MySQL 数据库 （上下文记忆功能）
+    url: ${memory.mysql.url}
+    username: ${memory.mysql.username}
+    password: ${memory.mysql.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    druid:
+      url: ${memory.mysql.url}
+      username: ${memory.mysql.username}
+      password: ${memory.mysql.password}
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      # 连接池配置
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      # 连接等待超时时间
+      max-wait: 60000
+      # 配置检测可以关闭的空闲连接间隔时间
+      time-between-eviction-runs-millis: 60000
+      # 配置连接在池中的最小生存时间
+      min-evictable-idle-time-millis: 300000
+      # 配置连接在池中的最大生存时间
+      max-evictable-idle-time-millis: 900000
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: true
+      test-on-return: false
+      # 打开PSCache，并且指定每个连接上PSCache的大小
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      # 连接属性
+      connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=5000;socketTimeout=60000;connectTimeout=30000
+      # 超时时间配置
+      remove-abandoned: true
+      remove-abandoned-timeout: 1800
+      # 连接失败重试次数
+      connection-error-retry-attempts: 3
+      # 断开后是否自动重连
+      break-after-acquire-failure: false
+      # 检查空闲连接的频率
+      keep-alive: true
+  data:
+    redis: # Redis 数据库 （上下文记忆功能）
+      host: ${memory.redis.host}
+      port: ${memory.redis.port}
+      password: ${memory.redis.password}
+      database: ${memory.redis.database}
+      timeout: 5000   # 连接超时时间（毫秒）
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1
 
 # springdoc-openapi项目配置
 springdoc:
@@ -50,18 +104,6 @@ knife4j:
   setting:
     language: zh_cn
 
-# 上下文记忆功能
-memory:
-  mysql:
-    url: ${mysql.url}
-    username: ${mysql.username}
-    password: ${mysql.password}
-  redis:
-    host: ${redis.host}
-    port: ${redis.port}
-    password: ${redis.password}
-    database: ${redis.database}
-
 # OSS 文件上传
 oss:
   qiniuyun:
@@ -78,3 +120,18 @@ ocr:
     endpoint: ${aliyun.endpoint}
   llama-cloud:
     access-key: ${llama.access-key}
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.swimmingliu.model.entity
+  configuration:
+    # MyBatis 配置
+    map-underscore-to-camel-case: true
+  global-config:
+    # 全局配置
+    db-config:
+      # 数据库配置
+      id-type: auto
+      table-prefix: t_
+    workerId: 1  # 工作机器ID配置
+    datacenterId: 1  # 数据中心ID配置

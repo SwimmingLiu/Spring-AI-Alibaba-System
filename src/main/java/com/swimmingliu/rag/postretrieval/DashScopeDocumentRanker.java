@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
-import org.springframework.ai.rag.postretrieval.ranking.DocumentRanker;
+import org.springframework.ai.rag.postretrieval.document.DocumentPostProcessor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -41,7 +41,7 @@ import java.util.Optional;
  * @author <a href="mailto:yuluo08290126@gmail.com">yuluo</a>
  */
 
-public class DashScopeDocumentRanker implements DocumentRanker {
+public class DashScopeDocumentRanker implements DocumentPostProcessor {
 
 	private static final Logger logger = LoggerFactory.getLogger(DashScopeDocumentRanker.class);
 
@@ -53,7 +53,7 @@ public class DashScopeDocumentRanker implements DocumentRanker {
 
 	@NotNull
 	@Override
-	public List<Document> rank(
+	public List<Document> process(
 			@Nullable Query query,
 			@Nullable List<Document> documents
 	) {

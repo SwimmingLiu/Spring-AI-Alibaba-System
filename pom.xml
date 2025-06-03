@@ -8,11 +8,11 @@
         <version>3.4.4</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>com.orangemust</groupId>
-    <artifactId>doors</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>door-applets-bg-high-code</name>
-    <description>door-applets-bg-high-code</description>
+    <groupId>com.swimmingliu</groupId>
+    <artifactId>spring-ai-alibaba-system</artifactId>
+    <version>1.0.0.1</version>
+    <name>spring-ai-alibaba-system</name>
+    <description>Spring-Ai-Alibaba-System</description>
     <url/>
     <licenses>
         <license/>
@@ -29,21 +29,27 @@
     <properties>
         <java.version>17</java.version>
         <springdoc>2.8.6</springdoc>
-        <spring-ai-openai>1.0.0-M6</spring-ai-openai>
-        <spring-ai-alibaba>1.0.0-M6.1</spring-ai-alibaba>
+        <spring-ai-alibaba-dashscope>1.0.0.1</spring-ai-alibaba-dashscope>
+        <spring-ai-tika-document>1.0.0-RC1</spring-ai-tika-document>
         <knife4j>4.5.0</knife4j>
         <hutool>5.8.37</hutool>
-        <mysql>8.0.32</mysql>
+        <mysql>9.2.0</mysql>
         <jwt>4.5.0</jwt>
-        <jedis>5.2.0</jedis>
+        <druid>1.2.21</druid>
+        <mybatis-plus>3.5.12</mybatis-plus>
         <qiniucloud>7.18.0</qiniucloud>
         <ocr-aliyun>3.1.3</ocr-aliyun>
         <fastjson>2.0.57</fastjson>
+        <tika-apache>3.1.0</tika-apache>
     </properties>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -62,18 +68,13 @@
         </dependency>
         <dependency>
             <groupId>com.alibaba.cloud.ai</groupId>
-            <artifactId>spring-ai-alibaba-starter</artifactId>
-            <version>${spring-ai-alibaba}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.ai</groupId>
-            <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
-            <version>${spring-ai-openai}</version>
+            <artifactId>spring-ai-alibaba-starter-dashscope</artifactId>
+            <version>${spring-ai-alibaba-dashscope}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.ai</groupId>
             <artifactId>spring-ai-tika-document-reader</artifactId>
-            <version>${spring-ai-openai}</version>
+            <version>${spring-ai-tika-document}</version>
         </dependency>
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
@@ -86,14 +87,24 @@
             <version>${hutool}</version>
         </dependency>
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <version>${mysql}</version>
         </dependency>
         <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>${jedis}</version>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>${jwt}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <version>${druid}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <version>${mybatis-plus}</version>
         </dependency>
         <dependency>
             <groupId>com.qiniu</groupId>
@@ -109,6 +120,11 @@
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>
             <version>${fastjson}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.tika</groupId>
+            <artifactId>tika-core</artifactId>
+            <version>${tika-apache}</version>
         </dependency>
     </dependencies>
 

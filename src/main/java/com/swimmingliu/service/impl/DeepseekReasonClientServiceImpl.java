@@ -16,21 +16,24 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 
-import static com.swimmingliu.common.constants.BaseConstants.CHAT_MEMORY_RETRIEVE_SIZE;
-import static com.swimmingliu.common.constants.PromptConstants.DEFAULT_REASON_SETTING_PROMPT;
 import static com.swimmingliu.common.constants.PromptConstants.DOCUMENT_RAG_PROMPT;
 import static com.swimmingliu.common.constants.PromptParamConstants.CONTEXT_DOCUMENT;
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
-import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_RETRIEVE_SIZE_KEY;
+
+/**
+*   @author SwimmingLiu
+*   @date 2025-06-03 16:28
+*   @description: deepseek-r1
+*/
+
 
 @Service("deepseekReasonClientService")
-public class DeepseekReasonClientServiceImpl implements ChatClientService {
+public class DeepseekReasonClientServiceImpl extends AbstractChatClientService implements ChatClientService {
+    @Resource
+    private FileUtil fileUtil;
     public final DashscopeDeepseekProperties deepseekProperties;
     public final ChatClient deepseekChatClient;
     public final ReasoningContentAdvisor reasoningContentAdvisor;
     public final ChatMemory redisChatMemory;
-    @Resource
-    private FileUtil fileUtil;
 
     public DeepseekReasonClientServiceImpl(DashscopeDeepseekProperties deepseekProperties,
                                            DashScopeChatModel chatModel,
@@ -44,45 +47,41 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
                 .withModel(this.deepseekProperties.getReasonModelName())
                 .build();
         this.deepseekChatClient = ChatClient.builder(chatModel)
-                .defaultAdvisors(new MessageChatMemoryAdvisor(this.redisChatMemory))
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder(this.redisChatMemory).build())
                 // 输出Deepseek的思考过程
                 .defaultAdvisors(this.reasoningContentAdvisor)
                 // 实现 Logger 的 Advisor
                 .defaultAdvisors(new SimpleLoggerAdvisor())
                 // 设置 ChatClient 中 ChatModel 的 Options 参数
                 .defaultOptions(dashScopeChatOptions)
-                .defaultSystem(DEFAULT_REASON_SETTING_PROMPT)
                 .build();
     }
 
 
     @Override
-    public String ask(String question, String chatId) {
+    public String doAsk(String question, String chatId) {
         return deepseekChatClient.prompt(question)
                 .advisors(x -> x
-                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
+                        .param(ChatMemory.CONVERSATION_ID, chatId))
                 .call()
                 .content();
     }
 
     @Override
-    public Flux<String> askStream(String question, String chatId) {
+    public Flux<String> doAskStream(String question, String chatId) {
         return this.deepseekChatClient.prompt(question)
                 .advisors(x -> x
-                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
+                        .param(ChatMemory.CONVERSATION_ID, chatId))
                 .stream()
                 .content();
     }
 
     @Override
-    public String askWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
+    public String doAskWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
         String documentText = fileUtil.getDocumentText(fileUrl);
         return deepseekChatClient.prompt(question)
                 .advisors(x -> x
-                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
+                        .param(ChatMemory.CONVERSATION_ID, chatId))
                 .system(systemSpec ->
                         systemSpec.text(DOCUMENT_RAG_PROMPT).param(CONTEXT_DOCUMENT, documentText)
                 )
@@ -91,12 +90,11 @@ public class DeepseekReasonClientServiceImpl implements ChatClientService {
     }
 
     @Override
-    public Flux<String> askStreamWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
+    public Flux<String> doAskStreamWithFile(String question, String chatId, String fileUrl) throws IOException, InterruptedException {
         String documentText = fileUtil.getDocumentText(fileUrl);
         return this.deepseekChatClient.prompt(question)
                 .advisors(x -> x
-                        .param(CHAT_MEMORY_CONVERSATION_ID_KEY, chatId)
-                        .param(CHAT_MEMORY_RETRIEVE_SIZE_KEY, CHAT_MEMORY_RETRIEVE_SIZE))
+                        .param(ChatMemory.CONVERSATION_ID, chatId))
                 .system(systemSpec ->
                         systemSpec.text(DOCUMENT_RAG_PROMPT).param(CONTEXT_DOCUMENT, documentText)
                 )
